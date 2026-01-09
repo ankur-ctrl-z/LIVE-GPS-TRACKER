@@ -3,7 +3,7 @@ const socket = io();
 const map = L.map("map").setView([20.5937, 78.9629], 5);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "© OpenStreetMap contributors",
+  attribution: "ankur's map",
 }).addTo(map);
 
 const otherMarkers = {};
