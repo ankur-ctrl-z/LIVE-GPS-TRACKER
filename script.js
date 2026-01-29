@@ -23,6 +23,23 @@ let mySocketId = null;
 
 const others = {};
 
+/* DISTANCE (meters) */
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = (d) => (d * Math.PI) / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 /* BEARING */
 function getBearing(lat1, lon1, lat2, lon2) {
   const toRad = (d) => (d * Math.PI) / 180;
@@ -65,6 +82,21 @@ navigator.geolocation.watchPosition(
       return;
     }
 
+    const distance = getDistance(
+      prevPos.latitude,
+      prevPos.longitude,
+      latitude,
+      longitude
+    );
+
+    // 🚫 GPS jump → reset route (NO RANDOM LINE)
+    if (distance > 1000) {
+      myRoute.setLatLngs([[latitude, longitude]]);
+      prevPos = { latitude, longitude };
+      myMarker.setLatLng([latitude, longitude]);
+      return;
+    }
+
     const angle = getBearing(
       prevPos.latitude,
       prevPos.longitude,
@@ -77,7 +109,7 @@ navigator.geolocation.watchPosition(
       img.style.transform = `translateY(-6px) scale(1.08) rotate(${angle}deg)`;
     }
 
-    myMarker.setLatLng([latitude, longitude], { animate: true });
+    myMarker.setLatLng([latitude, longitude]);
     myRoute.addLatLng([latitude, longitude]);
 
     prevPos = { latitude, longitude };
@@ -108,6 +140,21 @@ socket.on("receive-location", ({ id, latitude, longitude }) => {
 
   const u = others[id];
 
+  const distance = getDistance(
+    u.prev.latitude,
+    u.prev.longitude,
+    latitude,
+    longitude
+  );
+
+  // 🚫 GPS jump → reset route
+  if (distance > 1000) {
+    u.route.setLatLngs([[latitude, longitude]]);
+    u.marker.setLatLng([latitude, longitude]);
+    u.prev = { latitude, longitude };
+    return;
+  }
+
   const angle = getBearing(
     u.prev.latitude,
     u.prev.longitude,
@@ -120,7 +167,7 @@ socket.on("receive-location", ({ id, latitude, longitude }) => {
     img.style.transform = `translateY(-6px) scale(1.08) rotate(${angle}deg)`;
   }
 
-  u.marker.setLatLng([latitude, longitude], { animate: true });
+  u.marker.setLatLng([latitude, longitude]);
   u.route.addLatLng([latitude, longitude]);
   u.prev = { latitude, longitude };
 });
@@ -133,5 +180,3 @@ socket.on("user-disconnected", (id) => {
     delete others[id];
   }
 });
-
-
