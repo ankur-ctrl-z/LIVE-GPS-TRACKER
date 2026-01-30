@@ -10,8 +10,8 @@ html, body {
 
 /* FAKE 3D RIDER */
 .rider-3d-icon img {
-  width: 50px;
-  height: 50px;
+  width: 80px;
+  height: 80px;
 
   transform-origin: center;
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.45));
