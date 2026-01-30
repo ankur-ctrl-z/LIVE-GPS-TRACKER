@@ -194,24 +194,22 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const rider3DIcon = L.divIcon({
   className: "rider-3d-icon",
   html: `<img src="/rider-3d.png" />`,
-  iconSize: [80, 80],
-  iconAnchor: [40, 40],
+  iconSize: [50, 50],
+  iconAnchor: [25, 25],
 });
 
 /* STATE */
 let myMarker = null;
-let myRoute = null;
 let prevPos = null;
 let mySocketId = null;
 let myLastAngle = 0;
 
 const others = {};
 
-/* DISTANCE (meters) */
+/* DISTANCE */
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const toRad = (d) => (d * Math.PI) / 180;
-
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
 
@@ -227,8 +225,8 @@ function getDistance(lat1, lon1, lat2, lon2) {
 /* BEARING */
 function getBearing(lat1, lon1, lat2, lon2) {
   const toRad = (d) => (d * Math.PI) / 180;
-
   const dLon = toRad(lon2 - lon1);
+
   const y = Math.sin(dLon) * Math.cos(toRad(lat2));
   const x =
     Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
@@ -264,11 +262,6 @@ navigator.geolocation.watchPosition(
         icon: rider3DIcon,
       }).addTo(map);
 
-      myRoute = L.polyline([[latitude, longitude]], {
-        color: "blue",
-        weight: 4,
-      }).addTo(map);
-
       map.setView([latitude, longitude], 16);
       prevPos = { latitude, longitude };
       return;
@@ -281,9 +274,8 @@ navigator.geolocation.watchPosition(
       longitude
     );
 
-    // 🚫 GPS jump
+    // Ignore GPS jumps
     if (distance > 1000) {
-      myRoute.setLatLngs([[latitude, longitude]]);
       myMarker.setLatLng([latitude, longitude]);
       prevPos = { latitude, longitude };
       return;
@@ -305,7 +297,6 @@ navigator.geolocation.watchPosition(
     }
 
     myMarker.setLatLng([latitude, longitude]);
-    myRoute.addLatLng([latitude, longitude]);
     prevPos = { latitude, longitude };
   },
   console.error,
@@ -321,12 +312,6 @@ socket.on("receive-location", ({ id, latitude, longitude }) => {
       marker: L.marker([latitude, longitude], {
         icon: rider3DIcon,
       }).addTo(map),
-
-      route: L.polyline([[latitude, longitude]], {
-        color: "red",
-        weight: 3,
-      }).addTo(map),
-
       prev: { latitude, longitude },
       lastAngle: 0,
     };
@@ -343,7 +328,6 @@ socket.on("receive-location", ({ id, latitude, longitude }) => {
   );
 
   if (distance > 1000) {
-    u.route.setLatLngs([[latitude, longitude]]);
     u.marker.setLatLng([latitude, longitude]);
     u.prev = { latitude, longitude };
     return;
@@ -365,7 +349,6 @@ socket.on("receive-location", ({ id, latitude, longitude }) => {
   }
 
   u.marker.setLatLng([latitude, longitude]);
-  u.route.addLatLng([latitude, longitude]);
   u.prev = { latitude, longitude };
 });
 
@@ -373,7 +356,6 @@ socket.on("receive-location", ({ id, latitude, longitude }) => {
 socket.on("user-disconnected", (id) => {
   if (others[id]) {
     map.removeLayer(others[id].marker);
-    map.removeLayer(others[id].route);
     delete others[id];
   }
 });
