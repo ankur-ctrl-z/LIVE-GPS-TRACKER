@@ -7,7 +7,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "ankur's map",
 }).addTo(map);
 
-/* ICON */
+/* ICON */ 
 const rider3DIcon = L.divIcon({
   className: "rider-3d-icon",
   html: `<img src="/rider-3d.png" />`,
